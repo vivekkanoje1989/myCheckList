@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="./fonts/fonts.css">
+    <link rel="stylesheet" href="./css/bootstrap.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <link rel="stylesheet" href="./css/style_task_manager.css">
+</head>
+
+<body>
+    <div class="alert alert-info" id="message" role="alert">A simple info alert—check it out!</div>
+    <div class="centered">
+        <nav>
+            <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                <div class="btn-group" role="group">
+                    <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false"><i class="fas fa-user"></i>
+                        {{ userName }}
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                        <a class="dropdown-item" href="./">LogOut</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+
+        <div class="hero-circle">
+            <div class="hero-face">
+                <div id="hour" class="hero-hour" style="transform: rotate(225.725deg);"></div>
+                <div id="minute" class="hero-minute" style="transform: rotate(188.7deg);"></div>
+                <div id="second" class="hero-second" style="transform: rotate(162deg);"></div>
+            </div>
+        </div>
+        <span class="clockTime"></span>
+    </div>
+
+    <div class="task-list">
+        <button class="btn btn-danger resetBtn" title="Remove all task"><i class="fa fa-trash"></i></button>
+        <form id="taskForm" class="form-inline" enctype="multipart/form-data">
+            <input type="text" name="userName" id="userName" style="display:none;" value="{{userName}}">
+            <div class="form-group mx-sm-10 mb-2">
+                <input type="text" name="task" class="form-control hideInp" id="addTaskInp" value="" placeholder="Add task">
+            </div>
+            <button type="submit" id="addTaskBtn" class="btn btn-primary mb-2 rounded " title="Add new task"><i class="fa fa-plus"></i></button>
+        </form>
+        {{!-- <p class="mt-4" id="message"></p> --}}
+        <h2>My {{ title }}</h2>
+        <div class="container"></div>
+    </div>
+
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/popper.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/global.js"></script>
+    <script src="./js/clockScript.js"></script>
+
+    <script>
+        moment.locale('en');
+        moment().format('llll');
+        $(document).ready(function () {
+            getUserTasks();
+            $(document).on('click', '#addTaskBtn', (event) => {
+                event.preventDefault();
+                let hc = $('#addTaskInp').hasClass('hideInp');
+                let inpV = $('#addTaskInp').val();
+                if (!hc && inpV.length > 0) {
+                    showAlert("Connecting to server...");
+                    addTasks(inpV);
+                    $('#addTaskInp').val('');
+                } else {
+                    $('#addTaskInp').toggleClass('hideInp');
+                }
+            });
+
+            $(document).on('click', '.resetBtn', () => {
+                $('.container').empty();
+                deleteUserTasks();
+            })
+        });
+
+        function getAllTasks() {
+            $.ajax({
+                url: "http://localhost:8000/api/tasks",
+                success: function (result) {
+                    appendDataTasks(result);
+                }
+            });
+        }
+
+        function getUserTasks() {
+            let userName = $('#userName').val();
+            showAlert("Connecting to server...");
+
+            $.ajax({
+                url: "http://localhost:8000/api/usertasks/" + userName,
+                method: "GET",
+                beforeSend: function () {
+                    $('#message').text("");
+                    showAlert("Fetching...");
+                },
+                success: function (result) {
+                    appendDataTasks(result);
+                }
+            });
+        }
+
+        function addTasks(task) {
+            showAlert("Connecting...");
+            $.ajax({
+                url: "http://localhost:8000/api/addUserTask",
+                method: "POST",
+                data: JSON.stringify({
+                    userName: $('#userName').val(),
+                    task: task
+                }),
+                contentType: 'application/json',
+                beforeSend: function () {
+                    showAlert("Processing...");
+                },
+                success: function (result) {
+                    showAlert("Fetching...");
+                    getUserTasks();
+                }
+            });
+        }
+
+        function deleteUserTasks() {
+            let userName = $('#userName').val();
+            showAlert("Connecting to server...");
+
+            $.ajax({
+                url: "http://localhost:8000/api/deleteAllUserTask/" + userName,
+                method: "GET",
+                beforeSend: function () {
+                    showAlert("Proceeding...");
+                },
+                success: function (result) {
+                    appendDataTasks(result);
+                }
+            });
+        }
+
+        function markTaskDone(task) {
+            let taskId = $(task).data('task_id');
+            if(taskId <= 0 || taskId == 'undefined' || !taskId){
+                return false;
+            }
+
+            let userName = $('#userName').val();
+            showAlert("Connecting to server...");
+
+            $.ajax({
+                url: "http://localhost:8000/api/doneTask/" + taskId + "/" + userName,
+                method: "GET",
+                beforeSend: function(){
+                    showAlert("Processing...");
+                },
+                success: function (result) {
+                    if (result.success) {
+                        showAlert("Updated to server...");
+                    } else if (result.error) {
+                        showAlert(JSON.stringify(result.error));
+                    }
+                }
+            });
+        }
+
+        function appendDataTasks(result) {
+            $(".container").empty();
+            console.log(JSON.stringify(result.data));
+            if(!result.data || result.data.length <= 0){
+                showAlert('No tasks found.');
+                return false;
+            }
+            $.each(result.data, (indx, value) => {
+                html = '';
+                if (value.status) {
+                    html += '<label class="task" data-task_id="' + value.id +
+                        '" onclick="markTaskDone(this)"><input type="checkbox" class="taskChkbox" checked><i class="fas fa-check"></i><span class="text">' +
+                        value.task + '</span><span class="addedOn">' + moment(value.onDate,
+                            "YYYYMMDD h:mm:ss a").format("llll") + '</span></label>';
+                } else {
+                    html += '<label class="task" data-task_id="' + value.id +
+                        '" onclick="markTaskDone(this)"><input type="checkbox"class="taskChkbox" ><i class="fas fa-check"></i><span class="text">' +
+                        value.task + '</span><span class="addedOn">' + moment(value.onDate,
+                            "YYYYMMDD h:mm:ss a").format("llll") + '</span></label>';
+                }
+                $('.container').append(html);
+            })
+            showAlert("Done fetching tasks...");
+        }
+
+        function showAlert(msg) {
+            $('#message').text(msg);
+            $('#message').css('transform', 'translate(-50%, -50%) scale(1, 1)');
+
+            setTimeout(() => {
+                $('#message').css('transform', 'translate(-50%, -50%) scale(0, 0)');
+            }, 2000);
+        }
+    </script>
+
+</body>
+
+</html>

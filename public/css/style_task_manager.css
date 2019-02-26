@@ -1,0 +1,84 @@
+.task-list{
+    position: relative;
+    padding: 40px;
+    min-height: 400px;
+    background: url('../img/task_manager_bg.png') no-repeat;
+    background-size: cover;
+    overflow-y: auto;
+}
+
+.task-list h2{
+    margin-top: 10px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.task{
+    display: flex;
+    position: relative;
+    padding:  10px 0;
+    align-items: center;
+    cursor: pointer;
+}
+
+.task input{
+    position: absolute;
+    visibility: hidden;
+}
+
+.task i{
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    text-align: center;
+    line-height: 48px;
+    font-size: 20px;
+    margin-right: 14px;
+    color: transparent;
+}
+
+.text{
+    font-size: 18px;
+    color: #fff;
+}
+
+.task input:checked ~ i{
+    color: #e74c3c;
+}
+
+.task input:checked ~ .text{
+    text-decoration: line-through;
+    color: #e74c3c;
+}
+
+.form-inline{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+#addTaskInp{
+    transform: scale(1, 1);
+    transition: transform 500ms ease-in-out;
+}
+
+.hideInp{
+    transform: scale(0, 0) !important;
+}
+
+.resetBtn{
+    position: absolute;
+    left: 15px;
+    top: 15px;
+}
+
+.addedOn{
+    font-size: 0.7em;
+    display: block;
+    position: absolute;
+    color: wheat;
+    bottom: 0;
+    left: 60px;
+}
