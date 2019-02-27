@@ -1,7 +1,5 @@
 (function () {
-
-    var currentLang = 'en';
-    moment.locale(currentLang);
+    moment.locale('en');
     
     function updateClock() {
         var now = moment(),

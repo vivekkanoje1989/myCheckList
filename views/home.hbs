@@ -174,7 +174,6 @@
 
         function appendDataTasks(result) {
             $(".container").empty();
-            console.log(JSON.stringify(result.data));
             if(!result.data || result.data.length <= 0){
                 showAlert('No tasks found.');
                 return false;
