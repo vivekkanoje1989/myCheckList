@@ -8,10 +8,14 @@ var loggedInUsers = [];
 
 /* Logged out user from server. */
 function logOutUser(user) {
+  
+  console.log(`in loggedInUsers : ${loggedInUsers}`);
   let arr = loggedInUsers.filter(function (ele) {
     return ele != user;
   });
   loggedInUsers = arr;
+  console.log(`in loggedInUsers : ${loggedInUsers}`);
+
 }
 
 /* GET Login page. */
@@ -43,7 +47,9 @@ router.get('/home', function (req, res, next) {
 /* Log Out. */
 router.get('/logout', function (req, res, next) {
   let userName = req.query.user ? encodeURIComponent(req.query.user) : '';
+  console.log(`loggedInUsers : ${loggedInUsers}`);
   logOutUser(userName);
+  console.log(`loggedInUsers : ${loggedInUsers}`);
   res.render('login', {
     title: 'Login',
     message: 'Log out successfully.'
